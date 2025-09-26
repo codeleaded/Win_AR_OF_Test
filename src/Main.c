@@ -63,6 +63,21 @@ void BW_Render(Pixel* target,unsigned int width,unsigned int height,float* bw_bu
         }
     }
 }
+void VField_Render(Pixel* target,unsigned int width,unsigned int height,Vec2* bw_buffer,int w,int h){
+    for(int i = 0;i<h;i++){
+        for(int j = 0;j<w;j++){
+            const Vec2 flower = Vec2_Mulf(bw_buffer[i * w + j],0.01f);
+            const Vec2 pos = { j,i };
+            const float len = F32_Clamp(Vec2_Mag(flower),0.0f,1.0f);
+            target[i * width + j] = Pixel_toRGBA(len,len,len,1.0f);
+
+            if((int)F32_Abs(flower.x) || (int)F32_Abs(flower.y)){
+                const Vec2 tar = Vec2_Add(pos,Vec2_Mulf(Vec2_Norm(flower),5.0f));
+                RenderLine(pos,tar,RED,1.0f);
+            }
+        }
+    }
+}
 
 void Setup(AlxWindow* w){
     rlc = RLCamera_New("/dev/video0",RLCAMERA_WIDTH,RLCAMERA_HEIGHT);
@@ -83,7 +98,7 @@ void Update(AlxWindow* w){
     if(RLCamera_Ready(&rlc)){
         Sprite_Free(&captured_old);
         captured_old = captured;
-
+        
         RLCamera_Update(&rlc);
         captured = Sprite_Cpy(&rlc.lastimg);
         Sprite_Resize(&captured,OUTPUT_WIDTH,OUTPUT_HEIGHT);
@@ -129,8 +144,9 @@ void Update(AlxWindow* w){
         rect_v.y *= -1.0f;
     }
     
-    Sprite_Render(WINDOW_STD_ARGS,&captured,0.0f,0.0f);
+    //Sprite_Render(WINDOW_STD_ARGS,&captured,0.0f,0.0f);
     //BW_Render(WINDOW_STD_ARGS,ln_before,OUTPUT_WIDTH,OUTPUT_HEIGHT);
+    VField_Render(WINDOW_STD_ARGS,flow,OUTPUT_WIDTH,OUTPUT_HEIGHT);
     RenderRect(rect.p.x,rect.p.y,rect.d.x,rect.d.y,RED);
 }
 void Delete(AlxWindow* w){
